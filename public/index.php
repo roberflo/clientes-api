@@ -22,10 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 //TODO: Go to models and use reference
 class Db
 {
-   private $host = 'localhost';
-    private $user = 'dimasfer44';
-    private $pass = '88Di+fer44';
-    private $dbname = 'mundopaquete';
+  private $host = 'localhost';
+  private $user = 'root';
+  private $pass = '';
+  private $dbname = 'mundopaquete';
     
     public function connect()
     {
@@ -88,37 +88,35 @@ $app->get('/customers', function (Request $request, Response $response) {
 });
 
 $app->get('/customers/{id}',function (Request $request, Response $response, array $args) {
- $id = $request->getAttribute('id');
- $data = $request->getParsedBody();
- 
+    $id = $request->getAttribute('id');
+    $data = $request->getParsedBody();
+    
+    $sql = "SELECT * FROM customers WHERE id = $id";
+              
+    try {
+      $db = new Db();
+      $conn = $db->connect();
 
- $sql = "SELECT * FROM customers WHERE id = $id";
-           
- 
- try {
-   $db = new Db();
-   $conn = $db->connect();
+      $stmt = $conn->prepare($sql);
+      $result = $stmt->execute();
+      
+      $customers = $stmt->fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $response->getBody()->write(json_encode($customers));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
 
-   $stmt = $conn->prepare($sql);
-   $result = $stmt->execute();
-  
-   $customers = $stmt->fetchAll(PDO::FETCH_OBJ);
-   $db = null;
-  
-   $response->getBody()->write(json_encode($customers));
-   return $response
-     ->withHeader('content-type', 'application/json')
-     ->withStatus(200);
- } catch (PDOException $e) {
-   $error = array(
-     "message" => $e->getMessage()
-   );
-
-   $response->getBody()->write(json_encode($error));
-   return $response
-     ->withHeader('content-type', 'application/json')
-     ->withStatus(500);
- }
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
 });
 
 $app->post('/customers', function (Request $request, Response $response, array $args) {
@@ -164,54 +162,54 @@ $app->post('/customers', function (Request $request, Response $response, array $
 });
 
 $app->put('/customers/{id}',function (Request $request, Response $response, array $args) {
- $id = $request->getAttribute('id');
- $data = $request->getParsedBody();
-    $CustomerName = $data["CustomerName"];
-    $Email = $data["Email"];
-    $Phone = $data["Phone"];
-    $Address = $data["Address"];
-    $TaxId = $data["TaxId"];
-    $Company = $data["Company"];
+    $id = $request->getAttribute('id');
+    $data = $request->getParsedBody();
+        $CustomerName = $data["CustomerName"];
+        $Email = $data["Email"];
+        $Phone = $data["Phone"];
+        $Address = $data["Address"];
+        $TaxId = $data["TaxId"];
+        $Company = $data["Company"];
 
- $sql = "UPDATE customers SET
-           CustomerName = :CustomerName,
-           Email = :Email,
-           Phone = :Phone,
-           Address = :Address,
-           TaxId = :TaxId,
-           Company = :Company
- WHERE id = $id";
+    $sql = "UPDATE customers SET
+              CustomerName = :CustomerName,
+              Email = :Email,
+              Phone = :Phone,
+              Address = :Address,
+              TaxId = :TaxId,
+              Company = :Company
+    WHERE id = $id";
 
- try {
-   $db = new Db();
-   $conn = $db->connect();
-  
-   $stmt = $conn->prepare($sql);
-   $stmt->bindParam(':CustomerName', $CustomerName);
-   $stmt->bindParam(':Email', $Email);
-   $stmt->bindParam(':Phone', $Phone);
-   $stmt->bindParam(':Address', $Address);
-   $stmt->bindParam(':TaxId', $TaxId);
-   $stmt->bindParam(':Company', $Company);
+    try {
+      $db = new Db();
+      $conn = $db->connect();
+      
+      $stmt = $conn->prepare($sql);
+      $stmt->bindParam(':CustomerName', $CustomerName);
+      $stmt->bindParam(':Email', $Email);
+      $stmt->bindParam(':Phone', $Phone);
+      $stmt->bindParam(':Address', $Address);
+      $stmt->bindParam(':TaxId', $TaxId);
+      $stmt->bindParam(':Company', $Company);
 
-   $result = $stmt->execute();
+      $result = $stmt->execute();
 
-   $db = null;
-   echo "Update successful! ";
-   $response->getBody()->write(json_encode($result));
-   return $response
-     ->withHeader('content-type', 'application/json')
-     ->withStatus(200);
- } catch (PDOException $e) {
-   $error = array(
-     "message" => $e->getMessage()
-   );
+      $db = null;
+      echo "Update successful! ";
+      $response->getBody()->write(json_encode($result));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
 
-   $response->getBody()->write(json_encode($error));
-   return $response
-     ->withHeader('content-type', 'application/json')
-     ->withStatus(500);
- }
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
 });
 
 $app->delete('/customers/{id}', function (Request $request, Response $response, array $args) {
@@ -241,9 +239,7 @@ $app->delete('/customers/{id}', function (Request $request, Response $response, 
         ->withHeader('content-type', 'application/json')
         ->withStatus(500);
     }
-   });
-
-
+});
 
 //** Services Actions **//
     //Get services
@@ -260,107 +256,117 @@ $app->delete('/customers/{id}', function (Request $request, Response $response, 
     //Delete company by id
 
 //** Invoice Actions **//
-    //Get All invoices
-    $app->get('/invoices', function (Request $request, Response $response) {
-        $sql = "SELECT * FROM invoices";
-       
-        try {
-          $db = new Db();
-          $conn = $db->connect();
-          $stmt = $conn->query($sql);
-          $customers = $stmt->fetchAll(PDO::FETCH_OBJ);
-          $db = null;
-         
-          $response->getBody()->write(json_encode($customers));
-          return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
-        } catch (PDOException $e) {
-          $error = array(
-            "message" => $e->getMessage()
-          );
-       
-          $response->getBody()->write(json_encode($error));
-          return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(500);
-        }
-    });
-    //Get invoices by Id
-    $app->get('/invoices/{id}',function (Request $request, Response $response, array $args) {
-      $id = $request->getAttribute('id');
-      $data = $request->getParsedBody();
+//Get All invoices
+$app->get('/invoices', function (Request $request, Response $response) {
+    $sql = "SELECT * FROM invoices";
+    
+    try {
+      $db = new Db();
+      $conn = $db->connect();
+      $stmt = $conn->query($sql);
+      $customers = $stmt->fetchAll(PDO::FETCH_OBJ);
+      $db = null;
       
-     
-      $sql = "SELECT * FROM invoices WHERE Id = $id";
-                
-      
-      try {
-        $db = new Db();
-        $conn = $db->connect();
-     
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->execute();
-       
-        $customers = $stmt->fetchAll(PDO::FETCH_OBJ);
-        $db = null;
-       
-        $response->getBody()->write(json_encode($customers));
-        return $response
-          ->withHeader('content-type', 'application/json')
-          ->withStatus(200);
-      } catch (PDOException $e) {
-        $error = array(
-          "message" => $e->getMessage()
-        );
-     
-        $response->getBody()->write(json_encode($error));
-        return $response
-          ->withHeader('content-type', 'application/json')
-          ->withStatus(500);
-      }
-     });
+      $response->getBody()->write(json_encode($customers));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
+    
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
+});
 
-    //Get customer invoices
-    $app->get('/customers/{id}/invoices',function (Request $request, Response $response, array $args) {
-        $id = $request->getAttribute('id');
-        $data = $request->getParsedBody();
-        
-       
-        $sql = "SELECT * FROM invoices WHERE CustomerId = $id";
-                  
-        
-        try {
-          $db = new Db();
-          $conn = $db->connect();
-       
-          $stmt = $conn->prepare($sql);
-          $result = $stmt->execute();
-         
-          $customers = $stmt->fetchAll(PDO::FETCH_OBJ);
-          $db = null;
-         
-          $response->getBody()->write(json_encode($customers));
-          return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
-        } catch (PDOException $e) {
-          $error = array(
-            "message" => $e->getMessage()
-          );
-       
-          $response->getBody()->write(json_encode($error));
-          return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(500);
-        }
-       });
-    //Add invoice to customer
-        //Invoice Header 
-            // Add company Data
-            // Add customer Data
-            // Add subtotal
-            // Add tax if needed
+//Get invoices by Id
+$app->get('/invoices/{id}',function (Request $request, Response $response, array $args) {
+    $id = $request->getAttribute('id');
+    $data = $request->getParsedBody();
+    
+    $sql = "SELECT * FROM invoices WHERE Id = $id";
+              
+    try {
+      $db = new Db();
+      $conn = $db->connect();
+    
+      $stmt = $conn->prepare($sql);
+      $result = $stmt->execute();
+      
+      $invoices = $stmt->fetchAll(PDO::FETCH_OBJ);
+      
+      
+      //Get Items
+      $sqlItems = "Select * from invoiceItems where InvoiceId = $id";
+      $stmt = $conn->prepare($sqlItems);
+      $result = $stmt->execute();
+      $items = $stmt->fetchAll(PDO::FETCH_OBJ);
+      
+      //Add Items
+      $invoices[0]->InvoiceItems = $items;
+      
+      
+      
+      $db = null;
+      $response->getBody()->write(json_encode($invoices));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
+    
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
+});
+
+//Get customer invoices
+$app->get('/customers/{id}/invoices',function (Request $request, Response $response, array $args) {
+    $id = $request->getAttribute('id');
+    $data = $request->getParsedBody();
+
+    $sql = "SELECT * FROM invoices WHERE CustomerId = $id";
+            
+    try {
+      $db = new Db();
+      $conn = $db->connect();
+
+      $stmt = $conn->prepare($sql);
+      $result = $stmt->execute();
+      
+      $customers = $stmt->fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $response->getBody()->write(json_encode($customers));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
+
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
+});
+
+//Add invoice to customer
+//Invoice Header 
+// Add company Data
+// Add customer Data
+// Add subtotal
+// Add tax if needed
 $app->post('/invoices', function (Request $request, Response $response, array $args) {
     $data = $request->getParsedBody();
 
@@ -377,8 +383,7 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
     $CustomerId = $data["CustomerId"];
     $Status = $data["Status"];
    
-   
-   $sql = "INSERT INTO invoices 
+    $sql = "INSERT INTO invoices 
           (
            CustomerName, Address, TaxId,
            AccountOf, ExcentSales, NonSubjectsSales,
@@ -411,9 +416,48 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
       $stmt->bindParam(':Status', $Status );
 
       $result = $stmt->execute();
+      $InvoiceId = $conn->lastInsertId();
    
       $db = null;
       $response->getBody()->write(json_encode($result));
+
+      if ($result == true) {
+          $invoiceItems = $data["InvoiceItems"];
+          foreach($invoiceItems as $item) {
+             
+            
+                $ExcentSales = $item["ExcentSales"];
+                $NonSubjectsSales = $item["NonSubjectsSales"];
+                $Price = $item["Price"];
+                $Quantity = $item["Quantity"];
+                $Description = $item["Description"];
+            
+                $sql = "INSERT INTO invoiceItems 
+                            (InvoiceId, ExcentSales, NonSubjectsSales,
+                            Price, Quantity, Description) 
+                        VALUES 
+                            (:InvoiceId, :ExcentSales, :NonSubjectsSales,
+                            :Price, :Quantity, :Description)";
+            
+               
+                  $db = new Db();
+                  $conn = $db->connect();
+                
+                  $stmt = $conn->prepare($sql);
+            
+                  $stmt->bindParam(':InvoiceId', $InvoiceId );
+                  $stmt->bindParam(':ExcentSales', $ExcentSales );
+                  $stmt->bindParam(':NonSubjectsSales', $NonSubjectsSales );
+                  $stmt->bindParam(':Price', $Price );
+                  $stmt->bindParam(':Quantity', $Quantity );
+                  $stmt->bindParam(':Description', $Description );
+            
+                  $result = $stmt->execute();
+             
+             
+          };
+      };
+      $db = null;
       return $response
         ->withHeader('content-type', 'application/json')
         ->withStatus(200);
@@ -429,108 +473,155 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
     }
 });
 
-
 //Delete or Cancell? - Invoice by Id
 $app->delete('/invoices/{id}', function (Request $request, Response $response, array $args) {
-  $id = $args["id"];
- 
-  //softdelete? 
-  $sql = "DELETE FROM invoices WHERE id = $id";
- 
-  try {
-    $db = new Db();
-    $conn = $db->connect();
-   
-    $stmt = $conn->prepare($sql);
-    $result = $stmt->execute();
- 
-    $db = null;
-    $response->getBody()->write(json_encode($result));
-    return $response
-      ->withHeader('content-type', 'application/json')
-      ->withStatus(200);
-  } catch (PDOException $e) {
-    $error = array(
-      "message" => $e->getMessage()
-    );
- 
-    $response->getBody()->write(json_encode($error));
-    return $response
-      ->withHeader('content-type', 'application/json')
-      ->withStatus(500);
-  }
+    $id = $args["id"];
+  
+    //softdelete? 
+    $sql = "DELETE FROM invoices WHERE id = $id";
+  
+    try {
+      $db = new Db();
+      $conn = $db->connect();
+    
+      $stmt = $conn->prepare($sql);
+      $result = $stmt->execute();
+  
+      $db = null;
+      $response->getBody()->write(json_encode($result));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
+  
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
  });
 
  $app->put('/invoices/{id}',function (Request $request, Response $response, array $args) {
-  $id = $request->getAttribute('id');
-  $data = $request->getParsedBody();
+      $id = $request->getAttribute('id');
+      $data = $request->getParsedBody();
+    
+      $CustomerName = $data["CustomerName"];
+      $Address = $data["Address"];
+      $TaxId = $data["TaxId"];
+      $AccountOf = $data["AccountOf"];
+      $ExcentSales = $data["ExcentSales"];
+      $NonSubjectsSales = $data["NonSubjectsSales"];
+      $SubTotal = $data["SubTotal"];
+      $IVA = $data["IVA"];
+      $Total = $data["Total"];
+      $Description = $data["Description"];
+      $CustomerId = $data["CustomerId"];
+      $Status = $data["Status"];
   
-    $CustomerName = $data["CustomerName"];
-    $Address = $data["Address"];
-    $TaxId = $data["TaxId"];
-    $AccountOf = $data["AccountOf"];
-    $ExcentSales = $data["ExcentSales"];
-    $NonSubjectsSales = $data["NonSubjectsSales"];
-    $SubTotal = $data["SubTotal"];
-    $IVA = $data["IVA"];
-    $Total = $data["Total"];
-    $Description = $data["Description"];
-    $CustomerId = $data["CustomerId"];
-    $Status = $data["Status"];
- 
-  $sql = "UPDATE invoices SET
-            CustomerName = :CustomerName,
-            Address = :Address,
-            TaxId = :TaxId,
-            AccountOf = :AccountOf,
-            ExcentSales = :ExcentSales,
-            NonSubjectsSales = :NonSubjectsSales,
-            SubTotal = :SubTotal,
-            IVA = :IVA,
-            Total = :Total,
-            Description = :Description,
-            CustomerId = :CustomerId,
-            Status = :Status
-  WHERE id = $id";
- 
-  try {
-    $db = new Db();
-    $conn = $db->connect();
-   
-    $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':CustomerName', $CustomerName );
-    $stmt->bindParam(':Address', $Address );
-    $stmt->bindParam(':TaxId', $TaxId );
-    $stmt->bindParam(':AccountOf', $AccountOf );
-    $stmt->bindParam(':ExcentSales', $ExcentSales );
-    $stmt->bindParam(':NonSubjectsSales', $NonSubjectsSales );
-    $stmt->bindParam(':SubTotal', $SubTotal );
-    $stmt->bindParam(':IVA', $IVA );
-    $stmt->bindParam(':Total', $Total );
-    $stmt->bindParam(':Description', $Description );
-    $stmt->bindParam(':CustomerId', $CustomerId );
-    $stmt->bindParam(':Status', $Status );
- 
-    $result = $stmt->execute();
- 
-    $db = null;
-    echo "Update successful! ";
-    $response->getBody()->write(json_encode($result));
-    return $response
-      ->withHeader('content-type', 'application/json')
-      ->withStatus(200);
-  } catch (PDOException $e) {
-    $error = array(
-      "message" => $e->getMessage()
-    );
- 
-    $response->getBody()->write(json_encode($error));
-    return $response
-      ->withHeader('content-type', 'application/json')
-      ->withStatus(500);
-  }
+    $sql = "UPDATE invoices SET
+              CustomerName = :CustomerName,
+              Address = :Address,
+              TaxId = :TaxId,
+              AccountOf = :AccountOf,
+              ExcentSales = :ExcentSales,
+              NonSubjectsSales = :NonSubjectsSales,
+              SubTotal = :SubTotal,
+              IVA = :IVA,
+              Total = :Total,
+              Description = :Description,
+              CustomerId = :CustomerId,
+              Status = :Status
+    WHERE id = $id";
+  
+    try {
+      $db = new Db();
+      $conn = $db->connect();
+    
+      $stmt = $conn->prepare($sql);
+      $stmt->bindParam(':CustomerName', $CustomerName );
+      $stmt->bindParam(':Address', $Address );
+      $stmt->bindParam(':TaxId', $TaxId );
+      $stmt->bindParam(':AccountOf', $AccountOf );
+      $stmt->bindParam(':ExcentSales', $ExcentSales );
+      $stmt->bindParam(':NonSubjectsSales', $NonSubjectsSales );
+      $stmt->bindParam(':SubTotal', $SubTotal );
+      $stmt->bindParam(':IVA', $IVA );
+      $stmt->bindParam(':Total', $Total );
+      $stmt->bindParam(':Description', $Description );
+      $stmt->bindParam(':CustomerId', $CustomerId );
+      $stmt->bindParam(':Status', $Status );
+  
+      $result = $stmt->execute();
+  
+      $db = null;
+      echo "Update successful! ";
+      $response->getBody()->write(json_encode($result));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
+  
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
  });
 
+
+$app->post('/invoices/{id}/invoiceItems', function (Request $request, Response $response, array $args) {
+    $InvoiceId = $request->getAttribute('id');  
+    $data = $request->getParsedBody();
+
+    $ExcentSales = $data["ExcentSales"];
+    $NonSubjectsSales = $data["NonSubjectsSales"];
+    $Price = $data["Price"];
+    $Quantity = $data["Quantity"];
+    $Description = $data["Description"];
+
+    $sql = "INSERT INTO invoiceItems 
+                (InvoiceId, ExcentSales, NonSubjectsSales,
+                Price, Quantity, Description) 
+            VALUES 
+                (:InvoiceId, :ExcentSales, :NonSubjectsSales,
+                :Price, :Quantity, :Description)";
+
+    try {
+      $db = new Db();
+      $conn = $db->connect();
+    
+      $stmt = $conn->prepare($sql);
+
+      $stmt->bindParam(':InvoiceId', $InvoiceId );
+      $stmt->bindParam(':ExcentSales', $ExcentSales );
+      $stmt->bindParam(':NonSubjectsSales', $NonSubjectsSales );
+      $stmt->bindParam(':Price', $Price );
+      $stmt->bindParam(':Quantity', $Quantity );
+      $stmt->bindParam(':Description', $Description );
+
+      $result = $stmt->execute();
+  
+      $db = null;
+      $response->getBody()->write(json_encode($result));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(200);
+    } catch (PDOException $e) {
+      $error = array(
+        "message" => $e->getMessage()
+      );
+  
+      $response->getBody()->write(json_encode($error));
+      return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(500);
+    }
+});
+
 $app->run();
-
-
