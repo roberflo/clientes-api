@@ -268,7 +268,7 @@ $app->delete('/customers/{id}', function (Request $request, Response $response, 
 //** Invoice Actions **//
 //Get All invoices
 $app->get('/invoices', function (Request $request, Response $response) {
-    $sql = "SELECT * FROM invoices";
+    $sql = "SELECT * FROM invoices ORDER BY id  DESC";
     
     try {
       $db = new Db();
@@ -670,6 +670,73 @@ $app->post('/invoices/{id}/invoiceItems', function (Request $request, Response $
         ->withHeader('content-type', 'application/json')
         ->withStatus(500);
     }
+});
+
+//Setting Actions
+$app->get('/settings/{id}', function (Request $request, Response $response) {
+  $id = $request->getAttribute('id');
+  $sql = "SELECT * FROM settings WHERE id = $id";
+ 
+  try {
+    $db = new Db();
+    $conn = $db->connect();
+    $stmt = $conn->query($sql);
+    $settings = $stmt->fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+   
+    $response->getBody()->write(json_encode($settings));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(200);
+  } catch (PDOException $e) {
+    $error = array(
+      "message" => $e->getMessage()
+    );
+ 
+    $response->getBody()->write(json_encode($error));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(500);
+  }
+});
+
+$app->put('/settings/{id}',function (Request $request, Response $response, array $args) {
+    $id = $request->getAttribute('id');
+    $data = $request->getParsedBody();
+    $name = $data["name"];
+    $value = $data["value"];
+
+  $sql = "UPDATE settings SET
+            name = :name,
+            value = :value
+  WHERE id = $id";
+
+  try {
+    $db = new Db();
+    $conn = $db->connect();
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':name', $name);
+    $stmt->bindParam(':value', $value);
+
+    $result = $stmt->execute();
+
+    $db = null;
+    echo "Update successful! ";
+    $response->getBody()->write(json_encode($result));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(200);
+  } catch (PDOException $e) {
+    $error = array(
+      "message" => $e->getMessage()
+    );
+
+    $response->getBody()->write(json_encode($error));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(500);
+  }
 });
 
 $app->run();
