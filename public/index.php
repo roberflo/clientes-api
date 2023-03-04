@@ -461,6 +461,7 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
       $stmt->bindParam(':Description', $Description );
       $stmt->bindParam(':CustomerId', $CustomerId );
       $stmt->bindParam(':Status', $Status );
+      $stmt->bindParam(':DtesId', $DtesId );
 
       $result = $stmt->execute();
       $InvoiceId = $conn->lastInsertId();
@@ -477,7 +478,7 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
                 $NonSubjectsSales = $item["NonSubjectsSales"];
                 $Price = $item["Price"];
                 $Quantity = $item["Quantity"];
-                $Description = $item["description"];
+                $Description = $item["Description"];
             
                 $sql = "INSERT INTO invoiceItems 
                             (InvoiceId, ExcentSales, NonSubjectsSales,
