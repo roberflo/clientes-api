@@ -127,8 +127,10 @@ $app->post('/customers', function (Request $request, Response $response, array $
     $Address = $data["Address"];
     $TaxId = $data["TaxId"];
     $Company = $data["Company"];
+    $NIT = $data["NIT"];
+    $DUI = $data["DUI"];
 
-    $sql = "INSERT INTO customers (CustomerName, Email, Phone, Address, TaxId, Company) VALUES (:CustomerName, :Email, :Phone, :Address, :TaxId, :Company)";
+    $sql = "INSERT INTO customers (CustomerName, Email, Phone, Address, TaxId, Company, NIT, DUI) VALUES (:CustomerName, :Email, :Phone, :Address, :TaxId, :Company, :NIT, :DUI)";
    
     try {
       $db = new Db();
@@ -141,6 +143,8 @@ $app->post('/customers', function (Request $request, Response $response, array $
       $stmt->bindParam(':Address', $Address);
       $stmt->bindParam(':TaxId', $TaxId);
       $stmt->bindParam(':Company', $Company);
+      $stmt->bindParam(':NIT', $NIT);
+      $stmt->bindParam(':DUI', $DUI);
       
       $result = $stmt->execute();
    
@@ -170,6 +174,8 @@ $app->put('/customers/{id}',function (Request $request, Response $response, arra
         $Address = $data["Address"];
         $TaxId = $data["TaxId"];
         $Company = $data["Company"];
+        $NIT = $data["NIT"];
+        $DUI = $data["DUI"];
 
     $sql = "UPDATE customers SET
               CustomerName = :CustomerName,
@@ -177,7 +183,9 @@ $app->put('/customers/{id}',function (Request $request, Response $response, arra
               Phone = :Phone,
               Address = :Address,
               TaxId = :TaxId,
-              Company = :Company
+              Company = :Company,
+              NIT = :NIT,
+              DUI = :DUI
     WHERE id = $id";
 
     try {
@@ -191,6 +199,8 @@ $app->put('/customers/{id}',function (Request $request, Response $response, arra
       $stmt->bindParam(':Address', $Address);
       $stmt->bindParam(':TaxId', $TaxId);
       $stmt->bindParam(':Company', $Company);
+      $stmt->bindParam(':NIT', $NIT);
+      $stmt->bindParam(':DUI', $DUI);
 
       $result = $stmt->execute();
 
@@ -288,7 +298,28 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
     $id = $request->getAttribute('id');
     $data = $request->getParsedBody();
     
-    $sql = "SELECT * FROM invoices WHERE Id = $id";
+    $sql = "SELECT
+                id,
+                CreatedAt,
+                UpdatedAt,
+                SUBSTRING(CustomerName, 1, 5) AS CustomerName,
+                NIT,
+                DUI,
+                SUBSTRING(Address, 1, 12) AS Address,
+                TaxId,
+                SUBSTRING(AccountOf, 1, 10) AS AccountOf,
+                ExcentSales,
+                NonSubjectsSales,
+                SubTotal,
+                IVA,
+                Total,
+                Description,
+                CustomerId,
+                Status
+            FROM 
+                invoices 
+            WHERE 
+                Id = $id";
               
     try {
       $db = new Db();
@@ -301,7 +332,19 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
       
       
       //Get Items
-      $sqlItems = "Select * from invoiceItems where InvoiceId = $id";
+      $sqlItems = "SELECT 
+                      id,
+                      InvoiceId,
+                      ExcentSales,
+                      NonSubjectsSales,
+                      Price,
+                      Quantity, 
+                      SUBSTRING(Description, 1, 8) AS Description
+                  FROM 
+                      invoiceItems 
+                  WHERE 
+                    InvoiceId = $id";
+
       $stmt = $conn->prepare($sqlItems);
       $result = $stmt->execute();
       $items = $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -382,19 +425,23 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
     $Description = $data["Description"];
     $CustomerId = $data["CustomerId"];
     $Status = $data["Status"];
+    $DocumentType = $data["DocumentType"];
+
+    $DtesId = 1;
+    if ($DocumentType = "CreditoFiscal") { $DtesId = 2; }
    
     $sql = "INSERT INTO invoices 
           (
            CustomerName, Address, TaxId,
            AccountOf, ExcentSales, NonSubjectsSales,
            SubTotal, IVA, Total, Description, 
-           CustomerId, Status) 
+           CustomerId, Status, DtesId) 
            VALUES 
            (
             :CustomerName, :Address, :TaxId,
             :AccountOf, :ExcentSales, :NonSubjectsSales,
             :SubTotal, :IVA, :Total, :Description,
-            :CustomerId, :Status)";
+            :CustomerId, :Status, :DtesId)";
 
     try {
       $db = new Db();
@@ -430,7 +477,7 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
                 $NonSubjectsSales = $item["NonSubjectsSales"];
                 $Price = $item["Price"];
                 $Quantity = $item["Quantity"];
-                $Description = $item["Description"];
+                $Description = $item["description"];
             
                 $sql = "INSERT INTO invoiceItems 
                             (InvoiceId, ExcentSales, NonSubjectsSales,
