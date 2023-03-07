@@ -316,7 +316,7 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
                 Description,
                 CustomerId,
                 Status,
-                DtesId
+                DteId
             FROM 
                 invoices 
             WHERE 
@@ -428,21 +428,21 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
     $Status = $data["Status"];
     $DocumentType = $data["DocumentType"];
 
-    $DtesId = 1;
-    if ($DocumentType = "CreditoFiscal") { $DtesId = 2; }
+    $DteId = 1;
+    if ($DocumentType = "CreditoFiscal") { $DteId = 2; }
    
     $sql = "INSERT INTO invoices 
           (
            CustomerName, Address, TaxId,
            AccountOf, ExcentSales, NonSubjectsSales,
            SubTotal, IVA, Total, Description, 
-           CustomerId, Status, DtesId) 
+           CustomerId, Status, DteId) 
            VALUES 
            (
             :CustomerName, :Address, :TaxId,
             :AccountOf, :ExcentSales, :NonSubjectsSales,
             :SubTotal, :IVA, :Total, :Description,
-            :CustomerId, :Status, :DtesId)";
+            :CustomerId, :Status, :DteId)";
 
     try {
       $db = new Db();
@@ -462,7 +462,7 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
       $stmt->bindParam(':Description', $Description );
       $stmt->bindParam(':CustomerId', $CustomerId );
       $stmt->bindParam(':Status', $Status );
-      $stmt->bindParam(':DtesId', $DtesId );
+      $stmt->bindParam(':DteId', $DteId );
 
       $result = $stmt->execute();
       $InvoiceId = $conn->lastInsertId();
