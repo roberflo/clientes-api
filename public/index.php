@@ -315,7 +315,8 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
                 Total,
                 Description,
                 CustomerId,
-                Status
+                Status,
+                DtesId
             FROM 
                 invoices 
             WHERE 
