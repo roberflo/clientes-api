@@ -9,7 +9,7 @@ class Db
     private $host = 'localhost';
     private $user = 'root';
     private $pass = '';
-    private $dbname = 'mundopaquete';
+    private $dbname = 'mundopaquete-api';
 
     public function connect()
     {
