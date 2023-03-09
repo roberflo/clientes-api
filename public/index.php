@@ -268,7 +268,14 @@ $app->delete('/customers/{id}', function (Request $request, Response $response, 
 //** Invoice Actions **//
 //Get All invoices
 $app->get('/invoices', function (Request $request, Response $response) {
-    $sql = "SELECT * FROM invoices ORDER BY id  DESC";
+    $sql = "SELECT 
+                a.*,
+                b.CodeMH
+            FROM 
+              invoices a JOIN dtes b
+              ON a.DteId = b.id 
+            ORDER BY 
+              a.id DESC";
     
     try {
       $db = new Db();
@@ -299,28 +306,30 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
     $data = $request->getParsedBody();
     
     $sql = "SELECT
-                id,
-                CreatedAt,
-                UpdatedAt,
-                SUBSTRING(CustomerName, 1, 5) AS CustomerName,
-                NIT,
-                DUI,
-                SUBSTRING(Address, 1, 12) AS Address,
-                TaxId,
-                SUBSTRING(AccountOf, 1, 10) AS AccountOf,
-                ExcentSales,
-                NonSubjectsSales,
-                SubTotal,
-                IVA,
-                Total,
-                Description,
-                CustomerId,
-                Status,
-                DteId
+                a.id,
+                a.CreatedAt,
+                a.UpdatedAt,
+                SUBSTRING(a.CustomerName, 1, 5) AS CustomerName,
+                a.NIT,
+                a.DUI,
+                SUBSTRING(a.Address, 1, 12) AS Address,
+                a.TaxId,
+                SUBSTRING(a.AccountOf, 1, 10) AS AccountOf,
+                a.ExcentSales,
+                a.NonSubjectsSales,
+                a.SubTotal,
+                a.IVA,
+                a.Total,
+                a.Description,
+                a.CustomerId,
+                a.Status,
+                a.DteId,
+                b.CodeMH
             FROM 
-                invoices 
+                invoices a JOIN dtes b
+                ON a.DteId = b.id
             WHERE 
-                Id = $id";
+                a.id = $id";
               
     try {
       $db = new Db();
@@ -427,6 +436,8 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
     $CustomerId = $data["CustomerId"];
     $Status = $data["Status"];
     $DocumentType = $data["DocumentType"];
+    $DUI = $data["DUI"];
+    $NIT = $data["NIT"];
 
     $DteId = 1;
     if ($DocumentType = "CreditoFiscal") { $DteId = 2; }
@@ -436,13 +447,13 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
            CustomerName, Address, TaxId,
            AccountOf, ExcentSales, NonSubjectsSales,
            SubTotal, IVA, Total, Description, 
-           CustomerId, Status, DteId) 
+           CustomerId, Status, DteId, DUI, NIT) 
            VALUES 
            (
             :CustomerName, :Address, :TaxId,
             :AccountOf, :ExcentSales, :NonSubjectsSales,
             :SubTotal, :IVA, :Total, :Description,
-            :CustomerId, :Status, :DteId)";
+            :CustomerId, :Status, :DteId, :DUI, :NIT)";
 
     try {
       $db = new Db();
@@ -463,6 +474,8 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
       $stmt->bindParam(':CustomerId', $CustomerId );
       $stmt->bindParam(':Status', $Status );
       $stmt->bindParam(':DteId', $DteId );
+      $stmt->bindParam(':DUI', $DUI);
+      $stmt->bindParam(':NIT', $NIT);
 
       $result = $stmt->execute();
       $InvoiceId = $conn->lastInsertId();
@@ -502,8 +515,6 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
                   $stmt->bindParam(':Description', $Description );
             
                   $result = $stmt->execute();
-             
-             
           };
       };
       $db = null;
