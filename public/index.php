@@ -440,7 +440,7 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
     $NIT = $data["NIT"];
 
     $DteId = 1;
-    if ($DocumentType = "CreditoFiscal") { $DteId = 2; }
+    if ($DocumentType == "CreditoFiscal") { $DteId = 2; }
    
     $sql = "INSERT INTO invoices 
           (
@@ -474,8 +474,8 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
       $stmt->bindParam(':CustomerId', $CustomerId );
       $stmt->bindParam(':Status', $Status );
       $stmt->bindParam(':DteId', $DteId );
-      $stmt->bindParam(':DUI', $DUI);
-      $stmt->bindParam(':NIT', $NIT);
+      $stmt->bindParam(':DUI', $DUI );
+      $stmt->bindParam(':NIT', $NIT );
 
       $result = $stmt->execute();
       $InvoiceId = $conn->lastInsertId();
