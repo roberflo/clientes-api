@@ -324,7 +324,8 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
                 a.CustomerId,
                 a.Status,
                 a.DteId,
-                b.CodeMH
+                b.CodeMH,
+                a.CodigoInterno
             FROM 
                 invoices a JOIN dtes b
                 ON a.DteId = b.id
@@ -441,24 +442,33 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
 
     $DteId = 1;
     if ($DocumentType == "CreditoFiscal") { $DteId = 2; }
-   
-    $sql = "INSERT INTO invoices 
+
+    try {
+      $sql = "SELECT CodigoInterno FROM dtes WHERE id = $DteId";
+      $db = new Db();
+      $conn = $db->connect();
+      
+      $stmt = $conn->query($sql);
+      
+      $CodigoInterno = $stmt->fetchColumn();
+      $db = null;
+
+      $sql = "INSERT INTO invoices 
           (
            CustomerName, Address, TaxId,
            AccountOf, ExcentSales, NonSubjectsSales,
            SubTotal, IVA, Total, Description, 
-           CustomerId, Status, DteId, DUI, NIT) 
+           CustomerId, Status, DteId, DUI, NIT, CodigoInterno) 
            VALUES 
            (
             :CustomerName, :Address, :TaxId,
             :AccountOf, :ExcentSales, :NonSubjectsSales,
             :SubTotal, :IVA, :Total, :Description,
-            :CustomerId, :Status, :DteId, :DUI, :NIT)";
+            :CustomerId, :Status, :DteId, :DUI, :NIT, :CodigoInterno)";
 
-    try {
       $db = new Db();
       $conn = $db->connect();
-     
+
       $stmt = $conn->prepare($sql);
 
       $stmt->bindParam(':CustomerName', $CustomerName );
@@ -476,6 +486,7 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
       $stmt->bindParam(':DteId', $DteId );
       $stmt->bindParam(':DUI', $DUI );
       $stmt->bindParam(':NIT', $NIT );
+      $stmt->bindParam(':CodigoInterno', $CodigoInterno );
 
       $result = $stmt->execute();
       $InvoiceId = $conn->lastInsertId();
@@ -515,7 +526,16 @@ $app->post('/invoices', function (Request $request, Response $response, array $a
                   $stmt->bindParam(':Description', $Description );
             
                   $result = $stmt->execute();
+                  $db = null;
           };
+
+          $sql = "UPDATE dtes SET CodigoInterno = CodigoInterno + 1 WHERE id = $DteId";
+          $db = new Db();
+          $conn = $db->connect();
+
+          $stmt = $conn->prepare($sql);
+
+          $result = $stmt->execute();
       };
       $db = null;
       return $response
