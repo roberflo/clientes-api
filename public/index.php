@@ -225,7 +225,8 @@ $app->put('/customers/{id}',function (Request $request, Response $response, arra
 $app->delete('/customers/{id}', function (Request $request, Response $response, array $args) {
     $id = $args["id"];
    
-    $sql = "DELETE FROM customers WHERE id = $id";
+    //$sql = "DELETE FROM customers WHERE id = $id";
+    $sql = "UPDATE customers SET Activo = 1 WHERE id = $id";
    
     try {
       $db = new Db();
@@ -558,7 +559,8 @@ $app->delete('/invoices/{id}', function (Request $request, Response $response, a
     $id = $args["id"];
   
     //softdelete? 
-    $sql = "DELETE FROM invoices WHERE id = $id";
+    //$sql = "DELETE FROM invoices WHERE id = $id";
+    $sql = "UPDATE invoices SET Anulado = 1 WHERE id = $id";
   
     try {
       $db = new Db();
@@ -769,6 +771,101 @@ $app->put('/settings/{id}',function (Request $request, Response $response, array
       ->withHeader('content-type', 'application/json')
       ->withStatus(500);
   }
+});
+
+$app->get('/correlative', function (Request $request, Response $response) {
+  $sql = "SELECT * FROM dtes";
+ 
+  try {
+    $db = new Db();
+    $conn = $db->connect();
+    $stmt = $conn->query($sql);
+    $settings = $stmt->fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+   
+    $response->getBody()->write(json_encode($settings));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(200);
+  } catch (PDOException $e) {
+    $error = array(
+      "message" => $e->getMessage()
+    );
+ 
+    $response->getBody()->write(json_encode($error));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(500);
+  }
+});
+
+$app->get('/correlative/{id}', function (Request $request, Response $response) {
+  $id = $request->getAttribute('id');
+  $sql = "SELECT * FROM dtes WHERE id = $id";
+ 
+  try {
+    $db = new Db();
+    $conn = $db->connect();
+    $stmt = $conn->query($sql);
+    $settings = $stmt->fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+   
+    $response->getBody()->write(json_encode($settings));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(200);
+  } catch (PDOException $e) {
+    $error = array(
+      "message" => $e->getMessage()
+    );
+ 
+    $response->getBody()->write(json_encode($error));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(500);
+  }
+});
+
+$app->put('/correlative/{id}',function (Request $request, Response $response, array $args) {
+  $id = $request->getAttribute('id');
+  $data = $request->getParsedBody();
+  $CodeMH = $data["CodeMH"];
+  $Description = $data["Description"];
+  $CodigoInterno = $data["CodigoInterno"];
+
+  $sql = "UPDATE dtes SET
+            CodeMH = :CodeMH,
+            Description = :Description,
+            CodigoInterno = :CodigoInterno
+  WHERE id = $id";
+
+  try {
+    $db = new Db();
+    $conn = $db->connect();
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':CodeMH', $CodeMH);
+    $stmt->bindParam(':Description', $Description);
+    $stmt->bindParam(':CodigoInterno', $CodigoInterno);
+
+    $result = $stmt->execute();
+
+    $db = null;
+    echo "Update successful! ";
+    $response->getBody()->write(json_encode($result));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(200);
+    } catch (PDOException $e) {
+    $error = array(
+      "message" => $e->getMessage()
+    );
+
+    $response->getBody()->write(json_encode($error));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(500);
+}
 });
 
 $app->run();
