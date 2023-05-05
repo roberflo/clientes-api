@@ -780,10 +780,10 @@ $app->get('/correlative', function (Request $request, Response $response) {
     $db = new Db();
     $conn = $db->connect();
     $stmt = $conn->query($sql);
-    $settings = $stmt->fetchAll(PDO::FETCH_OBJ);
+    $correlative = $stmt->fetchAll(PDO::FETCH_OBJ);
     $db = null;
    
-    $response->getBody()->write(json_encode($settings));
+    $response->getBody()->write(json_encode($correlative));
     return $response
       ->withHeader('content-type', 'application/json')
       ->withStatus(200);
@@ -899,8 +899,8 @@ $app->get('/users/{email}/{password}', function (Request $request, Response $res
 
 $app->post('/users', function (Request $request, Response $response, array $args) {
   $data = $request->getParsedBody();
-  $Email = $request->getAttribute('email');
-  $Password = $request->getAttribute('password');
+  $Email = $data["Email"];
+  $Password = $data["Password"];
 
   $sql = "INSERT INTO users (Email, Password) VALUES (:Email, :Password)";
  
