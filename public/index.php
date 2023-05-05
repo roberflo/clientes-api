@@ -868,4 +868,67 @@ $app->put('/correlative/{id}',function (Request $request, Response $response, ar
 }
 });
 
+//Users
+$app->get('/users/{email}/{password}', function (Request $request, Response $response) {
+  $Email = $request->getAttribute('email');
+  $Password = $request->getAttribute('password');
+  $sql = "SELECT * FROM users WHERE Email = $Email AND Password = $Password";
+ 
+  try {
+    $db = new Db();
+    $conn = $db->connect();
+    $stmt = $conn->query($sql);
+    $settings = $stmt->fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+   
+    $response->getBody()->write(json_encode($settings));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(200);
+  } catch (PDOException $e) {
+    $error = array(
+      "message" => $e->getMessage()
+    );
+ 
+    $response->getBody()->write(json_encode($error));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(500);
+  }
+});
+
+$app->post('/users', function (Request $request, Response $response, array $args) {
+  $data = $request->getParsedBody();
+  $Email = $request->getAttribute('email');
+  $Password = $request->getAttribute('password');
+
+  $sql = "INSERT INTO users (Email, Password) VALUES (:Email, :Password)";
+ 
+  try {
+    $db = new Db();
+    $conn = $db->connect();
+   
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':Email', $Email);
+    $stmt->bindParam(':Password', $Password);
+    
+    $result = $stmt->execute();
+ 
+    $db = null;
+    $response->getBody()->write(json_encode($result));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(200);
+  } catch (PDOException $e) {
+    $error = array(
+      "message" => $e->getMessage()
+    );
+ 
+    $response->getBody()->write(json_encode($error));
+    return $response
+      ->withHeader('content-type', 'application/json')
+      ->withStatus(500);
+  }
+});
+
 $app->run();
