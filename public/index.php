@@ -127,8 +127,8 @@ $app->post('/customers', function (Request $request, Response $response, array $
     $Address = $data["Address"];
     $TaxId = $data["TaxId"];
     $Company = $data["Company"];
-    $NIT = $data["NIT"];
-    $DUI = $data["DUI"];
+    $NIT = str_replace("-", "", $data["NIT"]);
+    $DUI = str_replace("-", "", $data["DUI"]);
 
     $sql = "INSERT INTO customers (CustomerName, Email, Phone, Address, TaxId, Company, NIT, DUI) VALUES (:CustomerName, :Email, :Phone, :Address, :TaxId, :Company, :NIT, :DUI)";
    
@@ -176,6 +176,7 @@ $app->put('/customers/{id}',function (Request $request, Response $response, arra
         $Company = $data["Company"];
         $NIT = $data["NIT"];
         $DUI = $data["DUI"];
+        $Activo = $data["Activo"];
 
     $sql = "UPDATE customers SET
               CustomerName = :CustomerName,
@@ -185,7 +186,8 @@ $app->put('/customers/{id}',function (Request $request, Response $response, arra
               TaxId = :TaxId,
               Company = :Company,
               NIT = :NIT,
-              DUI = :DUI
+              DUI = :DUI,
+              Activo = :Activo
     WHERE id = $id";
 
     try {
@@ -201,6 +203,7 @@ $app->put('/customers/{id}',function (Request $request, Response $response, arra
       $stmt->bindParam(':Company', $Company);
       $stmt->bindParam(':NIT', $NIT);
       $stmt->bindParam(':DUI', $DUI);
+      $stmt->bindParam(':Activo', $Activo);
 
       $result = $stmt->execute();
 
@@ -834,8 +837,6 @@ $app->put('/correlative/{id}',function (Request $request, Response $response, ar
   $CodigoInterno = $data["CodigoInterno"];
 
   $sql = "UPDATE dtes SET
-            CodeMH = :CodeMH,
-            Description = :Description,
             CodigoInterno = :CodigoInterno
   WHERE id = $id";
 
