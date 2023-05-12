@@ -229,7 +229,7 @@ $app->delete('/customers/{id}', function (Request $request, Response $response, 
     $id = $args["id"];
    
     //$sql = "DELETE FROM customers WHERE id = $id";
-    $sql = "UPDATE customers SET Activo = 1 WHERE id = $id";
+    $sql = "UPDATE customers SET Activo = 0 WHERE id = $id";
    
     try {
       $db = new Db();
