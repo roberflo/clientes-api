@@ -873,7 +873,7 @@ $app->put('/correlative/{id}',function (Request $request, Response $response, ar
 $app->get('/users/{email}/{password}', function (Request $request, Response $response) {
   $Email = $request->getAttribute('email');
   $Password = $request->getAttribute('password');
-  $sql = "SELECT * FROM users WHERE Email = $Email AND Password = $Password";
+  $sql = "SELECT * FROM users WHERE Email = '$Email' AND Password = '$Password'";
  
   try {
     $db = new Db();
