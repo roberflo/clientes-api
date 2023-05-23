@@ -313,17 +313,17 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
                 a.id,
                 a.CreatedAt,
                 a.UpdatedAt,
-                SUBSTRING(a.CustomerName, 1, 5) AS CustomerName,
+                SUBSTRING(a.CustomerName, 1, 50) AS CustomerName,
                 a.NIT,
                 a.DUI,
-                SUBSTRING(a.Address, 1, 12) AS Address,
+                SUBSTRING(a.Address, 1, 50) AS Address,
                 a.TaxId,
-                SUBSTRING(a.AccountOf, 1, 10) AS AccountOf,
-                a.ExcentSales,
-                a.NonSubjectsSales,
-                a.SubTotal,
-                a.IVA,
-                a.Total,
+                SUBSTRING(a.AccountOf, 1, 50) AS AccountOf,
+                ROUND(a.ExcentSales, 2) AS ExcentSales,
+                ROUND(a.NonSubjectsSales, 2) AS NonSubjectsSales,
+                ROUND(a.SubTotal, 2) AS SubTotal,
+                ROUND(a.IVA, 2) AS IVA,
+                ROUND(a.Total, 2) AS Total,
                 a.Description,
                 a.CustomerId,
                 a.Status,
@@ -350,11 +350,11 @@ $app->get('/invoices/{id}',function (Request $request, Response $response, array
       $sqlItems = "SELECT 
                       id,
                       InvoiceId,
-                      ExcentSales,
-                      NonSubjectsSales,
-                      Price,
+                      ROUND(ExcentSales, 2) AS ExcentSales,
+                      ROUND(NonSubjectsSales, 2) AS NonSubjectsSales,
+                      ROUND(Price, 2) AS Price,
                       Quantity, 
-                      SUBSTRING(Description, 1, 8) AS Description
+                      SUBSTRING(Description, 1, 60) AS Description
                   FROM 
                       invoiceItems 
                   WHERE 
